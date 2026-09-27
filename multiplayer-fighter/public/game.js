@@ -435,7 +435,8 @@ function updateCPU() {
     }
 
     // Attacks (can happen while moving)
-    if (Math.random() < fireRate) {
+    const cpuHasFireball = fireballs.some(f => f.owner === cpuId);
+    if (!cpuHasFireball && Math.random() < fireRate) {
         const charData = CHARACTERS[cpu.character];
         const fb = {
             x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
