@@ -353,7 +353,7 @@ function shootFireball() {
             owner: myId,
             color: charData.pColor,
             size: charData.pSize,
-            damage: isSinglePlayer ? 34 : charData.pDamage, // 34 damage for 3-hit kill
+            damage: isSinglePlayer ? 20 : charData.pDamage, // 20 damage = 5 hits to kill
             charKey: p.character,
             pType: charData.pType,
             life: 1
@@ -411,12 +411,12 @@ function updateCPU() {
 
     let dist = p1.x - cpu.x;
     let speed = SPEED * 0.4;
-    let attackRange = 350;
+    let attackRange = 400;
     let fireRate = 0.005;
     let punchRate = 0.002;
 
-    if (cpuDifficulty === 'intermediate') { speed = SPEED * 0.7; attackRange = 300; fireRate = 0.015; punchRate = 0.005; }
-    if (cpuDifficulty === 'hard') { speed = SPEED * 1.1; attackRange = 250; fireRate = 0.03; punchRate = 0.01; }
+    if (cpuDifficulty === 'intermediate') { speed = SPEED * 0.7; attackRange = 250; fireRate = 0.015; punchRate = 0.008; }
+    if (cpuDifficulty === 'hard') { speed = SPEED * 1.2; attackRange = 60; fireRate = 0.02; punchRate = 0.03; } // mun ke saamne aata hai
 
     // Move
     if (Math.abs(dist) > attackRange) {
@@ -430,7 +430,7 @@ function updateCPU() {
                 x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
                 y: cpu.y + cpu.height / 2 - (charData.pSize/2),
                 vx: cpu.facingRight ? charData.pSpeed : -charData.pSpeed,
-                owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 34,
+                owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 20,
                 charKey: cpu.character, pType: charData.pType, life: 1
             };
             fireballs.push(fb);
