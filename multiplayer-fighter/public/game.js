@@ -210,34 +210,36 @@ if (socket) {
     });
 }
 
-socket.on('newPlayer', (player) => { players[player.id] = player; updateHUD(); });
+if (socket) {
+    socket.on('newPlayer', (player) => { players[player.id] = player; updateHUD(); });
 
-socket.on('playerMoved', (pData) => {
-    if (players[pData.id]) {
-        players[pData.id].x = pData.x;
-        players[pData.id].y = pData.y;
-        players[pData.id].facingRight = pData.facingRight;
-    }
-});
+    socket.on('playerMoved', (pData) => {
+        if (players[pData.id]) {
+            players[pData.id].x = pData.x;
+            players[pData.id].y = pData.y;
+            players[pData.id].facingRight = pData.facingRight;
+        }
+    });
 
-socket.on('playerAttacked', (id) => {
-    if (players[id]) {
-        playSound('punch');
-        players[id].isAttacking = true;
-        setTimeout(() => { if (players[id]) players[id].isAttacking = false; }, 200);
-    }
-});
+    socket.on('playerAttacked', (id) => {
+        if (players[id]) {
+            playSound('punch');
+            players[id].isAttacking = true;
+            setTimeout(() => { if (players[id]) players[id].isAttacking = false; }, 200);
+        }
+    });
 
-socket.on('playerHit', (data) => {
-    if (players[data.id]) {
-        players[data.id].health = data.health;
-        screenShake = 15;
-        playSound('hit');
-        createParticles(players[data.id].x + 25, players[data.id].y + 50, CHARACTERS[players[data.id].character].color);
-        updateHUD();
-        checkWinCondition();
-    }
-});
+    socket.on('playerHit', (data) => {
+        if (players[data.id]) {
+            players[data.id].health = data.health;
+            screenShake = 15;
+            playSound('hit');
+            createParticles(players[data.id].x + 25, players[data.id].y + 50, CHARACTERS[players[data.id].character].color);
+            updateHUD();
+            checkWinCondition();
+        }
+    });
+}
 
 const playerVoices = {};
 
