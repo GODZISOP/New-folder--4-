@@ -1,4 +1,4 @@
-const socket = io();
+const socket = (typeof io !== 'undefined') ? io() : null;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -197,16 +197,18 @@ singlePlayerBtn.addEventListener('click', () => {
     updateHUD();
 });
 
-socket.on('connect', () => { myId = socket.id; });
-socket.on('roomFull', () => { errorMsg.innerText = "Room is full!"; });
-
-socket.on('currentPlayers', (serverPlayers) => {
-    players = serverPlayers;
-    menuScreen.classList.add('hidden');
-    gameContainer.classList.remove('hidden');
-    gameActive = true;
-    updateHUD();
-});
+if (socket) {
+    socket.on('connect', () => { myId = socket.id; });
+    socket.on('roomFull', () => { errorMsg.innerText = "Room is full!"; });
+    
+    socket.on('currentPlayers', (serverPlayers) => {
+        players = serverPlayers;
+        menuScreen.classList.add('hidden');
+        gameContainer.classList.remove('hidden');
+        gameActive = true;
+        updateHUD();
+    });
+}
 
 socket.on('newPlayer', (player) => { players[player.id] = player; updateHUD(); });
 
