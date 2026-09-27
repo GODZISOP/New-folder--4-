@@ -20,13 +20,13 @@ const charGrid = document.getElementById('charGrid');
 
 // --- ANIME CHARACTER DATA ---
 const CHARACTERS = {
-    'goku': { name: 'Goku', color: '#ff6600', powerName: 'Kamehameha', pColor: '#00ffff', pSpeed: 20, pSize: 15, pDamage: 25, imgUrl: 'goku.png', pType: 'beam', audioUrl: 'https://www.myinstants.com/media/sounds/kamehameha.mp3' },
-    'vegeta': { name: 'Vegeta', color: '#0000ff', powerName: 'Final Flash', pColor: '#ffff00', pSpeed: 25, pSize: 10, pDamage: 20, imgUrl: 'vegeta.png', pType: 'beam', audioUrl: 'https://www.myinstants.com/media/sounds/vegeta-final-flash.mp3' },
-    'naruto': { name: 'Naruto', color: '#ff9900', powerName: 'Rasengan', pColor: '#66ccff', pSpeed: 15, pSize: 20, pDamage: 30, imgUrl: 'naruto.png', pType: 'sphere', audioUrl: 'https://www.myinstants.com/media/sounds/naruto-rasengan-sound-effect.mp3' },
-    'gojo': { name: 'Gojo', color: '#6600cc', powerName: 'Hollow Purple', pColor: '#9900ff', pSpeed: 10, pSize: 35, pDamage: 40, imgUrl: 'gojo.png', pType: 'sphere', audioUrl: 'https://www.myinstants.com/media/sounds/gojo-hollow-purple.mp3' },
-    'sukuna': { name: 'Sukuna', color: '#cc0000', powerName: 'Cleave', pColor: '#ff0000', pSpeed: 35, pSize: 5, pDamage: 15, imgUrl: 'sukuna.png', pType: 'slash', audioUrl: 'https://www.myinstants.com/media/sounds/sukuna-domain-expansion-2.mp3' },
-    'luffy': { name: 'Luffy', color: '#ff3333', powerName: 'Gum Gum Pistol', pColor: '#ffcccc', pSpeed: 18, pSize: 12, pDamage: 22, imgUrl: 'luffy.png', pType: 'fist', audioUrl: 'https://www.myinstants.com/media/sounds/gomu-gomu-no.mp3' },
-    'kalahonth': { name: 'Kalahonth', color: '#800080', powerName: 'Viral Joker Face', pColor: '#000000', pSpeed: 12, pSize: 40, pDamage: 50, imgUrl: 'kalahonth.png', pType: 'lips', audioUrl: 'https://www.myinstants.com/media/sounds/saari-umar-main-joker.mp3' }
+    'goku': { name: 'Goku', color: '#ff6600', powerName: 'Kamehameha', pColor: '#00ffff', pSpeed: 20, pSize: 15, pDamage: 25, imgUrl: 'goku.png', pType: 'beam', audioUrl: '' },
+    'vegeta': { name: 'Vegeta', color: '#0000ff', powerName: 'Final Flash', pColor: '#ffff00', pSpeed: 25, pSize: 10, pDamage: 20, imgUrl: 'vegeta.png', pType: 'beam', audioUrl: '' },
+    'naruto': { name: 'Naruto', color: '#ff9900', powerName: 'Rasengan', pColor: '#66ccff', pSpeed: 15, pSize: 20, pDamage: 30, imgUrl: 'naruto.png', pType: 'sphere', audioUrl: 'naruto-rasengan.mp3' },
+    'gojo': { name: 'Gojo', color: '#6600cc', powerName: 'Hollow Purple', pColor: '#9900ff', pSpeed: 10, pSize: 35, pDamage: 40, imgUrl: 'gojo.png', pType: 'sphere', audioUrl: '' },
+    'sukuna': { name: 'Sukuna', color: '#cc0000', powerName: 'Cleave', pColor: '#ff0000', pSpeed: 35, pSize: 5, pDamage: 15, imgUrl: 'sukuna.png', pType: 'slash', audioUrl: '' },
+    'luffy': { name: 'Luffy', color: '#ff3333', powerName: 'Gum Gum Pistol', pColor: '#ffcccc', pSpeed: 18, pSize: 12, pDamage: 22, imgUrl: 'luffy.png', pType: 'fist', audioUrl: '' },
+    'kalahonth': { name: 'Kalahonth', color: '#800080', powerName: 'Viral Joker Face', pColor: '#000000', pSpeed: 12, pSize: 40, pDamage: 50, imgUrl: 'kalahonth.png', pType: 'lips', audioUrl: 'rizxtar-joker.mp3' }
 };
 
 let selectedChar = 'goku'; // default
@@ -85,7 +85,7 @@ const SPEED = 7;
 const DASH_SPEED = 20;
 const FLOOR_Y = 500;
 
-const keys = { w: false, a: false, d: false, space: false, f: false, shift: false };
+const keys = { w: false, a: false, d: false, space: false, f: false, shift: false, c: false };
 let velocityY = 0;
 let isJumping = false;
 let cpuVelocityY = 0;
@@ -164,6 +164,29 @@ function playSound(type, charKey) {
         noise.start(now);
         
         osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'spawn') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now); osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.4);
+        gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.8, now + 0.1);
+        gain.gain.linearRampToValueAtTime(0, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'charge') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(40, now); 
+        osc.frequency.linearRampToValueAtTime(200, now + 0.4); // Powering up pitch
+        gain.gain.setValueAtTime(0.8, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        
+        // Bass rumble
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(30, now); // low bass
+        gain2.gain.setValueAtTime(1.0, now); gain2.gain.linearRampToValueAtTime(0.01, now + 0.4);
+        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+        osc2.start(now); osc2.stop(now + 0.4);
+        
+        osc.start(now); osc.stop(now + 0.4);
     }
 }
 
@@ -174,10 +197,12 @@ joinBtn.addEventListener('click', () => {
     const roomId = roomInput.value.trim();
     if (!roomId) { errorMsg.innerText = "Please enter a Room ID!"; return; }
     socket.emit('joinRoom', { roomId, playerName: nameInput.value.trim(), characterKey: selectedChar });
+    playSound('spawn');
 });
 
 singlePlayerBtn.addEventListener('click', () => {
     initAudio();
+    playSound('spawn');
     isSinglePlayer = true;
     cpuDifficulty = diffSelect.value;
     myId = 'player1';
@@ -187,8 +212,8 @@ singlePlayerBtn.addEventListener('click', () => {
     const randomChar = charKeys[Math.floor(Math.random() * charKeys.length)];
     
     players = {
-        [myId]: { id: myId, name: nameInput.value.trim() || 'You', character: selectedChar, x: 100, y: FLOOR_Y - 150, width: 60, height: 150, health: 100, facingRight: true, isAttacking: false },
-        [cpuId]: { id: cpuId, name: 'CPU', character: randomChar, x: 700, y: FLOOR_Y - 150, width: 60, height: 150, health: 100, facingRight: false, isAttacking: false }
+        [myId]: { id: myId, name: nameInput.value.trim() || 'You', character: selectedChar, x: 100, y: FLOOR_Y - 200, width: 90, height: 200, health: 100, energy: 100, facingRight: true, isAttacking: false, isCharging: false },
+        [cpuId]: { id: cpuId, name: 'CPU', character: randomChar, x: 700, y: FLOOR_Y - 200, width: 90, height: 200, health: 100, energy: 100, facingRight: false, isAttacking: false, isCharging: false }
     };
     
     menuScreen.classList.add('hidden');
@@ -294,6 +319,7 @@ window.addEventListener('keydown', (e) => {
     if (k === 'shift') { if(!keys.shift && !isDashing) dash(); keys.shift = true; }
     if (k === 'f') { if (!keys.f) punch(); keys.f = true; }
     if (k === ' ') { if (!keys.space) shootFireball(); keys.space = true; }
+    if (k === 'c') keys.c = true;
 });
 window.addEventListener('keyup', (e) => {
     const k = e.key.toLowerCase();
@@ -303,6 +329,7 @@ window.addEventListener('keyup', (e) => {
     if (k === 'shift') keys.shift = false;
     if (k === 'f') keys.f = false;
     if (k === ' ') keys.space = false;
+    if (k === 'c') keys.c = false;
 });
 
 // Touch Controls
@@ -315,6 +342,7 @@ function bindTouch(btnId, keyName) {
 }
 bindTouch('btn-left', 'a'); bindTouch('btn-right', 'd'); bindTouch('btn-jump', 'w');
 bindTouch('btn-punch', 'f'); bindTouch('btn-fireball', 'space'); bindTouch('btn-dash', 'shift');
+bindTouch('btn-charge', 'c');
 
 function punch() {
     const now = Date.now();
@@ -349,8 +377,11 @@ function punch() {
 function shootFireball() {
     const now = Date.now();
     if (now - lastFireballTime > 1000 && players[myId] && players[myId].health > 0) {
-        lastFireballTime = now;
         const p = players[myId];
+        if (p.energy === undefined) p.energy = 100;
+        if (p.energy < 30) return; // Not enough energy
+        p.energy -= 30;
+        lastFireballTime = now;
         const charData = CHARACTERS[p.character];
         
         const fb = {
@@ -360,7 +391,7 @@ function shootFireball() {
             owner: myId,
             color: charData.pColor,
             size: charData.pSize,
-            damage: isSinglePlayer ? 20 : charData.pDamage, // 20 damage = 5 hits to kill
+            damage: isSinglePlayer ? 20 : charData.pDamage, 
             charKey: p.character,
             pType: charData.pType,
             life: 1
@@ -379,8 +410,23 @@ function dash() {
 function updateLocalPlayer() {
     if (!myId || !players[myId] || players[myId].health <= 0) return;
     const p = players[myId];
-    if (p.vx === undefined) { p.vx = 0; p.stunTimer = 0; p.knockbackX = 0; }
+    if (p.vx === undefined) { p.vx = 0; p.stunTimer = 0; p.knockbackX = 0; p.energy = 100; p.isCharging = false; }
     let moved = false;
+
+    if (keys.c) {
+        p.isCharging = true;
+        p.energy += 0.5;
+        if (p.energy > 100) p.energy = 100;
+        createParticles(p.x + Math.random()*p.width, p.y + p.height, CHARACTERS[p.character].color, 1);
+        screenShake = 5; // heavy shake while charging
+        
+        if (!p.lastChargeSound || Date.now() - p.lastChargeSound > 300) {
+            playSound('charge');
+            p.lastChargeSound = Date.now();
+        }
+    } else {
+        p.isCharging = false;
+    }
 
     if (p.stunTimer > 0) {
         p.stunTimer--;
@@ -393,11 +439,11 @@ function updateLocalPlayer() {
             currentSpeed = DASH_SPEED;
             dashTime--;
             if(dashTime <= 0) isDashing = false;
-            createParticles(p.x+25, p.y+50, CHARACTERS[p.character].color, 2);
+            createParticles(p.x+p.width/2, p.y+p.height/2, CHARACTERS[p.character].color, 2);
         }
 
-        let acc = isDashing ? DASH_SPEED : 1.5;
-        let maxSpeed = isDashing ? DASH_SPEED : SPEED;
+        let acc = isDashing ? DASH_SPEED : (p.isCharging ? 0.5 : 1.5); // move slow if charging
+        let maxSpeed = isDashing ? DASH_SPEED : (p.isCharging ? SPEED*0.3 : SPEED);
 
         if (keys.a) { p.vx -= acc; p.facingRight = false; moved = true; }
         if (keys.d) { p.vx += acc; p.facingRight = true; moved = true; }
@@ -434,7 +480,7 @@ function updateCPU() {
     const p1 = players[myId];
     if (!p1 || p1.health <= 0) return;
     
-    if (cpu.vx === undefined) { cpu.vx = 0; cpu.stunTimer = 0; cpu.knockbackX = 0; }
+    if (cpu.vx === undefined) { cpu.vx = 0; cpu.stunTimer = 0; cpu.knockbackX = 0; cpu.energy = 100; cpu.isCharging = false; }
 
     let dist = p1.x - cpu.x;
     let speed = SPEED * 0.4;
@@ -448,13 +494,24 @@ function updateCPU() {
     // Always face player
     cpu.facingRight = dist > 0;
 
+    // CPU Charging Logic
+    if (cpu.energy < 30 && Math.abs(dist) > 350) {
+        cpu.isCharging = true;
+        cpu.energy += 0.5;
+        createParticles(cpu.x + Math.random()*cpu.width, cpu.y + cpu.height, CHARACTERS[cpu.character].color, 1);
+        speed *= 0.3; 
+    } else {
+        cpu.isCharging = false;
+        if (cpu.energy < 100) cpu.energy += 0.1; // slow passive regen
+    }
+
     if (cpu.stunTimer > 0) {
         cpu.stunTimer--;
         cpu.x += cpu.knockbackX;
         cpu.knockbackX *= 0.85;
     } else {
         // Movement Logic
-        let acc = 1.0;
+        let acc = cpu.isCharging ? 0.3 : 1.0;
         if (Math.abs(dist) < safeDistance) {
             cpu.vx += cpu.facingRight ? -acc : acc;
         } else if (Math.abs(dist) > 500) {
@@ -469,7 +526,8 @@ function updateCPU() {
         
         // Attacks
         const cpuHasFireball = fireballs.some(f => f.owner === cpuId);
-        if (!cpuHasFireball && Math.random() < fireRate) {
+        if (!cpuHasFireball && Math.random() < fireRate && cpu.energy >= 30) {
+            cpu.energy -= 30;
             const charData = CHARACTERS[cpu.character];
             const fb = {
                 x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
@@ -580,6 +638,8 @@ function updateHUD() {
         hp1.style.width = p1.health + '%';
         hp1.style.background = c1.color;
         hp1.style.boxShadow = `0 0 15px ${c1.color}`;
+        const en1 = document.getElementById('en1');
+        if (en1) { en1.style.width = (p1.energy || 0) + '%'; en1.style.background = c1.pColor; }
     }
     if(ids[1]) {
         const p2 = players[ids[1]];
@@ -589,6 +649,8 @@ function updateHUD() {
         hp2.style.width = p2.health + '%';
         hp2.style.background = c2.color;
         hp2.style.boxShadow = `0 0 15px ${c2.color}`;
+        const en2 = document.getElementById('en2');
+        if (en2) { en2.style.width = (p2.energy || 0) + '%'; en2.style.background = c2.pColor; }
     } else {
         name2.innerText = "Waiting for Player 2..."; hp2.style.width = '100%'; hp2.style.background = 'grey'; hp2.style.boxShadow = 'none';
     }
@@ -624,8 +686,8 @@ function draw() {
     ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
     ctx.fillRect(0, FLOOR_Y, canvas.width, canvas.height - FLOOR_Y);
     ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(canvas.width, FLOOR_Y);
-    ctx.strokeStyle = '#0ff'; ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = '#0ff';
-    ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#0ff'; ctx.lineWidth = 2;
+    ctx.stroke(); 
 
     for (let id in players) {
         const p = players[id];
@@ -633,11 +695,43 @@ function draw() {
         const charData = CHARACTERS[p.character];
         const img = loadedImages[p.character];
 
-        ctx.shadowBlur = 20; ctx.shadowColor = charData.color; ctx.fillStyle = charData.color;
-        
+        // REAL AURA DRAWING (Lightweight performance version)
+        if (p.isCharging || p.energy >= 100) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            let auraHeight = p.height * 1.5;
+            let time = Date.now();
+            
+            ctx.fillStyle = charData.pColor;
+            
+            // Multiple flame particles moving up (no gradients for performance)
+            for(let i=0; i<8; i++) {
+                let speed = (i % 3) + 4;
+                let yOffset = ((time * speed / 10) + (i * 30)) % auraHeight;
+                let xOffset = Math.sin((time / 150) + i) * 20; 
+                let particleSize = (p.width * 0.7) * (1 - (yOffset / auraHeight)); 
+                
+                let px = p.x + p.width/2 + xOffset;
+                let py = p.y + p.height - yOffset;
+                
+                ctx.globalAlpha = (1 - (yOffset / auraHeight)) * 0.6; 
+                ctx.beginPath();
+                ctx.ellipse(px, py, particleSize / 2, particleSize, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Base ground glow
+            ctx.globalAlpha = 0.5 + Math.sin(time / 50) * 0.1;
+            ctx.fillStyle = charData.color;
+            ctx.beginPath();
+            ctx.ellipse(p.x + p.width/2, p.y + p.height, p.width/1.5, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
         // Draw Shadow
         ctx.save();
-        ctx.shadowBlur = 0;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
         let shadowWidth = p.width - (FLOOR_Y - p.height - p.y) * 0.2; 
         if (shadowWidth < 10) shadowWidth = 10;
@@ -658,62 +752,69 @@ function draw() {
             if (!p.facingRight) ctx.scale(-1, 1); // Flip if facing left
             
             let scaleX = 1, scaleY = 1, rotation = 0;
+            let isJumpingInAir = p.y + p.height < FLOOR_Y;
             
             if (p.isAttacking) {
-                // Attack animation: lunge forward and tilt
-                ctx.translate(15, 0);
-                rotation = 0.1; 
-            } else if (p.y + p.height < FLOOR_Y) {
-                // Jump/Fall animation: stretch vertically
-                scaleX = 0.9; scaleY = 1.1;
-                if (p.stunTimer > 0) rotation = -0.2; // knocked back in air
+                // ATTACK: Lunge forward
+                ctx.translate(30, 0);
+                rotation = 0.25; 
+                scaleX = 1.1;
+                ctx.globalCompositeOperation = 'lighter';
+            } else if (p.isCharging) {
+                // CHARGE: Powering up stance
+                scaleY = 0.9; scaleX = 1.05; 
+                ctx.translate(0, p.height * 0.05); 
+                rotation = Math.sin(Date.now() / 20) * 0.05; 
+            } else if (isJumpingInAir) {
+                // JUMP: Stretch upwards
+                scaleX = 0.85; scaleY = 1.15;
+                if (velocityY < 0) rotation = -0.1; // rising
+                else rotation = 0.1; // falling
+                if (p.stunTimer > 0) rotation = -0.5; // knocked back in air
             } else if (p.stunTimer > 0) {
-                // Knockback on ground: tilt backward
-                rotation = -0.3;
+                // KNOCKBACK: Lean back
+                rotation = -0.4;
             } else if (p.vx !== undefined && Math.abs(p.vx) > 1) {
-                // Run animation: Wobble left and right
-                rotation = Math.sin(Date.now() / 60) * 0.15;
+                // RUN: Lean forward
+                rotation = 0.15;
+                scaleY = 1 + Math.sin(Date.now() / 40) * 0.03; 
             } else {
-                // Idle animation: Breathing (squash and stretch slowly)
+                // IDLE: Breathing 
                 scaleY = 1 + Math.sin(Date.now() / 250) * 0.02;
                 scaleX = 1 - Math.sin(Date.now() / 250) * 0.01;
             }
             
-            ctx.rotate(rotation);
             ctx.scale(scaleX, scaleY);
+            ctx.rotate(rotation);
             
-            // Draw image (offset by half width and full height since we translated to feet)
+            // Draw whole image (Fixed "Cut feet" issue)
             ctx.drawImage(img, -p.width/2, -p.height, p.width, p.height);
             
             ctx.restore();
         } else {
             ctx.fillRect(p.x, p.y, p.width, p.height);
-            ctx.fillStyle = 'white'; ctx.shadowBlur = 0;
+            ctx.fillStyle = 'white';
             const eyeX = p.facingRight ? p.x + 25 : p.x + 5;
             ctx.fillRect(eyeX, p.y + 15, 20, 8);
         }
         
-        ctx.fillStyle = 'white'; ctx.shadowBlur = 0;
+        ctx.fillStyle = 'white';
         if (p.isAttacking) {
-            ctx.shadowBlur = 15; ctx.shadowColor = 'white'; ctx.fillStyle = 'white';
             const attRange = 70;
             const attX = p.facingRight ? p.x + p.width : p.x - attRange;
             ctx.fillRect(attX, p.y + 20, attRange, 15);
-            ctx.shadowBlur = 0;
         }
     }
 
     fireballs.forEach(fb => {
-        ctx.shadowBlur = 20; ctx.shadowColor = fb.color; ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#fff';
         ctx.beginPath();
         if (fb.pType === 'beam') {
-            // A long fast laser beam (Kamehameha / Final Flash)
             const length = 150;
             const beamX = fb.vx > 0 ? fb.x - length : fb.x;
             ctx.fillStyle = '#fff';
             ctx.fillRect(beamX, fb.y, length + fb.size, fb.size);
-            // Core
-            ctx.shadowBlur = 0; ctx.fillStyle = fb.color;
+            ctx.fillStyle = fb.color;
             ctx.fillRect(beamX, fb.y + 4, length + fb.size, fb.size - 8);
         } else if (fb.pType === 'slash') {
             // A sharp crescent slash (Sukuna Cleave)

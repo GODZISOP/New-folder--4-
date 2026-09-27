@@ -30,11 +30,13 @@ io.on('connection', (socket) => {
             name: playerName || (isPlayer1 ? 'Player 1' : 'Player 2'),
             character: characterKey || 'goku',
             x: isPlayer1 ? 200 : 650,
-            y: FLOOR_Y - 100,
-            width: 50,
-            height: 100,
+            y: FLOOR_Y - 200,
+            width: 90,
+            height: 200,
             health: 100,
+            energy: 100,
             isAttacking: false,
+            isCharging: false,
             facingRight: isPlayer1,
             isDead: false
         };

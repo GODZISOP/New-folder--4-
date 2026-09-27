@@ -18,6 +18,8 @@ body {
     padding: 30px; border: 2px solid #0ff; border-radius: 10px;
     box-shadow: 0 0 30px #0ff; text-align: center;
     max-width: 600px;
+    max-height: 95vh;
+    overflow-y: auto;
 }
 .screen h1 { color: #f0f; text-shadow: 0 0 15px #f0f; font-size: 2.5em; margin-top: 0; margin-bottom: 10px;}
 
@@ -58,6 +60,10 @@ canvas { border: 3px solid #0ff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.4); bo
 .health-bar { width: 100%; height: 100%; transition: width 0.2s; }
 .p1 .health-bar { background: #0ff; box-shadow: 0 0 10px #0ff; float: left; }
 .p2 .health-bar { background: #f0f; box-shadow: 0 0 10px #f0f; float: right; }
+.energy-bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.7); border: 1px solid #fff; margin-top: 3px; }
+.energy-bar { width: 100%; height: 100%; background: #ffcc00; box-shadow: 0 0 10px #ffcc00; transition: width 0.1s; }
+.p1 .energy-bar { float: left; }
+.p2 .energy-bar { float: right; }
 .controls-hint { color: #fff; font-size: 0.8em; opacity: 0.8; margin-top: 20px;}
 
 /* Mobile Overlay Controls */
@@ -94,12 +100,15 @@ canvas { border: 3px solid #0ff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.4); bo
     display: grid;
     grid-template-areas: 
         ". dash ."
-        "punch . fireball";
+        "punch . fireball"
+        ". charge .";
     gap: 5px;
 }
 #btn-dash { grid-area: dash; }
 #btn-punch { grid-area: punch; }
 #btn-fireball { grid-area: fireball; }
+#btn-charge { grid-area: charge; background: rgba(255, 204, 0, 0.3); border-color: #ffcc00; box-shadow: 0 0 15px #ffcc00;}
+#btn-charge:active { background: rgba(255, 204, 0, 0.9); }
 
 @media (max-width: 950px), (max-height: 650px) {
     #game-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; justify-content: center; background: #000; }
@@ -107,5 +116,22 @@ canvas { border: 3px solid #0ff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.4); bo
     .controls-hint { display: none; }
     #mobile-controls { display: flex; }
     .hud { top: 15px; padding: 0 40px; }
-    .screen { transform: scale(0.8); margin-top: 20px; }
+    .screen { transform: scale(0.9); margin-top: 0; }
+}
+@media (max-height: 500px) {
+    .screen { transform: scale(1); padding: 10px; width: 90vw;}
+    .screen h1 { font-size: 1.5em; margin-bottom: 5px; }
+    #charPreviewImg { height: 80px !important; margin: 5px auto !important; }
+    .char-box { width: 45px; height: 45px; }
+    input, button, select { padding: 8px; font-size: 1em; }
+    .input-group { gap: 5px; }
+    hr { margin: 5px 0 !important; }
+}
+@media screen and (orientation: portrait) {
+    body::before {
+        content: "Please rotate your phone to landscape mode for the best experience!";
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: #000; color: #0ff; display: flex; align-items: center; justify-content: center;
+        z-index: 9999; font-size: 2em; text-align: center; padding: 20px; font-family: 'Orbitron';
+    }
 }
