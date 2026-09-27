@@ -411,32 +411,40 @@ function updateCPU() {
 
     let dist = p1.x - cpu.x;
     let speed = SPEED * 0.4;
-    let attackRange = 400;
+    let safeDistance = 0;
     let fireRate = 0.005;
     let punchRate = 0.002;
 
-    if (cpuDifficulty === 'intermediate') { speed = SPEED * 0.7; attackRange = 250; fireRate = 0.015; punchRate = 0.008; }
-    if (cpuDifficulty === 'hard') { speed = SPEED * 1.2; attackRange = 60; fireRate = 0.02; punchRate = 0.03; } // mun ke saamne aata hai
+    if (cpuDifficulty === 'intermediate') { speed = SPEED * 0.7; fireRate = 0.015; punchRate = 0.008; }
+    if (cpuDifficulty === 'hard') { speed = SPEED * 1.1; safeDistance = 250; fireRate = 0.04; punchRate = 0.03; } 
 
-    // Move
-    if (Math.abs(dist) > attackRange) {
-        cpu.facingRight = dist > 0;
+    // Always face player
+    cpu.facingRight = dist > 0;
+
+    // Movement Logic
+    if (Math.abs(dist) < safeDistance) {
+        // Player is too close, back away!
+        cpu.x += cpu.facingRight ? -speed : speed;
+    } else if (Math.abs(dist) > 500) {
+        // Player is too far, move closer
         cpu.x += cpu.facingRight ? speed : -speed;
-    } else {
-        cpu.facingRight = dist > 0;
-        if (Math.random() < fireRate) {
-            const charData = CHARACTERS[cpu.character];
-            const fb = {
-                x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
-                y: cpu.y + cpu.height / 2 - (charData.pSize/2),
-                vx: cpu.facingRight ? charData.pSpeed : -charData.pSpeed,
-                owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 20,
-                charKey: cpu.character, pType: charData.pType, life: 1
-            };
-            fireballs.push(fb);
-            playSound('blast');
-        }
-        if (Math.random() < punchRate && Math.abs(dist) < 150) {
+    }
+
+    // Attacks (can happen while moving)
+    if (Math.random() < fireRate) {
+        const charData = CHARACTERS[cpu.character];
+        const fb = {
+            x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
+            y: cpu.y + cpu.height / 2 - (charData.pSize/2),
+            vx: cpu.facingRight ? charData.pSpeed : -charData.pSpeed,
+            owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 20,
+            charKey: cpu.character, pType: charData.pType, life: 1
+        };
+        fireballs.push(fb);
+        playSound('blast');
+    }
+    
+    if (Math.random() < punchRate && Math.abs(dist) < 150) {
             cpu.isAttacking = true;
             playSound('punch');
             setTimeout(() => { if(players[cpuId]) players[cpuId].isAttacking = false; }, 200);
