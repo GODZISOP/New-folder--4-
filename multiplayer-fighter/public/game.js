@@ -461,7 +461,6 @@ function updateCPU() {
                 if(players[myId].health <= 0) setTimeout(() => checkWinCondition(), 500);
             }
         }
-    }
 
     // CPU Jump Logic
     if (!cpuIsJumping && Math.random() < 0.015) {
