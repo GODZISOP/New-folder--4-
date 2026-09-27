@@ -79,7 +79,27 @@ canvas { border: 3px solid #0ff; box-shadow: 0 0 40px rgba(0, 255, 255, 0.4); bo
     font-size: 1.5em; display: flex; justify-content: center; align-items: center; user-select: none; box-shadow: 0 0 15px #0ff; margin: 5px; backdrop-filter: blur(5px);
 }
 .touch-btn:active { background: rgba(0, 255, 255, 0.9); transform: scale(0.9); }
-.d-pad, .action-buttons { display: flex; gap: 10px; }
+.d-pad {
+    display: grid;
+    grid-template-areas: 
+        ". up ."
+        "left . right";
+    gap: 5px;
+}
+#btn-jump { grid-area: up; }
+#btn-left { grid-area: left; }
+#btn-right { grid-area: right; }
+
+.action-buttons {
+    display: grid;
+    grid-template-areas: 
+        ". dash ."
+        "punch . fireball";
+    gap: 5px;
+}
+#btn-dash { grid-area: dash; }
+#btn-punch { grid-area: punch; }
+#btn-fireball { grid-area: fireball; }
 
 @media (max-width: 950px), (max-height: 650px) {
     #game-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; justify-content: center; background: #000; }

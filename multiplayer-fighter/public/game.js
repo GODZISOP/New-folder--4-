@@ -332,6 +332,9 @@ function punch() {
                 const attX = p.facingRight ? p.x + p.width : p.x - attRange;
                 if (attX < p2.x + p2.width && attX + attRange > p2.x && p.y < p2.y + p2.height && p.y + 15 > p2.y) {
                     players[cpuId].health -= 10;
+                    if(players[cpuId].vx === undefined) { players[cpuId].vx = 0; players[cpuId].stunTimer = 0; players[cpuId].knockbackX = 0; }
+                    players[cpuId].stunTimer = 15;
+                    players[cpuId].knockbackX = p.facingRight ? 12 : -12;
                     playSound('hit');
                     createParticles(p2.x + 30, p2.y + 50, '#ff0000', 5);
                     if (players[cpuId].health <= 0) setTimeout(() => checkWinCondition(), 500);
@@ -376,27 +379,45 @@ function dash() {
 function updateLocalPlayer() {
     if (!myId || !players[myId] || players[myId].health <= 0) return;
     const p = players[myId];
+    if (p.vx === undefined) { p.vx = 0; p.stunTimer = 0; p.knockbackX = 0; }
     let moved = false;
 
-    let currentSpeed = SPEED;
-    if (isDashing) {
-        currentSpeed = DASH_SPEED;
-        dashTime--;
-        if(dashTime <= 0) isDashing = false;
-        createParticles(p.x+25, p.y+50, CHARACTERS[p.character].color, 2);
-    }
+    if (p.stunTimer > 0) {
+        p.stunTimer--;
+        p.x += p.knockbackX;
+        p.knockbackX *= 0.85;
+        moved = true;
+    } else {
+        let currentSpeed = SPEED;
+        if (isDashing) {
+            currentSpeed = DASH_SPEED;
+            dashTime--;
+            if(dashTime <= 0) isDashing = false;
+            createParticles(p.x+25, p.y+50, CHARACTERS[p.character].color, 2);
+        }
 
-    if (keys.a) { p.x -= currentSpeed; p.facingRight = false; moved = true; }
-    if (keys.d) { p.x += currentSpeed; p.facingRight = true; moved = true; }
+        let acc = isDashing ? DASH_SPEED : 1.5;
+        let maxSpeed = isDashing ? DASH_SPEED : SPEED;
+
+        if (keys.a) { p.vx -= acc; p.facingRight = false; moved = true; }
+        if (keys.d) { p.vx += acc; p.facingRight = true; moved = true; }
+
+        p.vx *= 0.82; // friction
+        if (p.vx > maxSpeed) p.vx = maxSpeed;
+        if (p.vx < -maxSpeed) p.vx = -maxSpeed;
+
+        p.x += p.vx;
+        if (Math.abs(p.vx) > 0.1) moved = true;
+
+        if (keys.w && !isJumping) {
+            velocityY = JUMP_POWER; isJumping = true; moved = true;
+            playSound('jump');
+            createParticles(p.x+25, p.y+100, '#fff', 5);
+        }
+    }
 
     if (p.x < 0) p.x = 0;
     if (p.x + p.width > canvas.width) p.x = canvas.width - p.width;
-
-    if (keys.w && !isJumping) {
-        velocityY = JUMP_POWER; isJumping = true; moved = true;
-        playSound('jump');
-        createParticles(p.x+25, p.y+100, '#fff', 5);
-    }
 
     velocityY += GRAVITY; p.y += velocityY;
 
@@ -412,6 +433,8 @@ function updateCPU() {
     const cpu = players[cpuId];
     const p1 = players[myId];
     if (!p1 || p1.health <= 0) return;
+    
+    if (cpu.vx === undefined) { cpu.vx = 0; cpu.stunTimer = 0; cpu.knockbackX = 0; }
 
     let dist = p1.x - cpu.x;
     let speed = SPEED * 0.4;
@@ -425,48 +448,62 @@ function updateCPU() {
     // Always face player
     cpu.facingRight = dist > 0;
 
-    // Movement Logic
-    if (Math.abs(dist) < safeDistance) {
-        // Player is too close, back away!
-        cpu.x += cpu.facingRight ? -speed : speed;
-    } else if (Math.abs(dist) > 500) {
-        // Player is too far, move closer
-        cpu.x += cpu.facingRight ? speed : -speed;
-    }
-
-    // Attacks (can happen while moving)
-    const cpuHasFireball = fireballs.some(f => f.owner === cpuId);
-    if (!cpuHasFireball && Math.random() < fireRate) {
-        const charData = CHARACTERS[cpu.character];
-        const fb = {
-            x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
-            y: cpu.y + cpu.height / 2 - (charData.pSize/2),
-            vx: cpu.facingRight ? charData.pSpeed : -charData.pSpeed,
-            owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 20,
-            charKey: cpu.character, pType: charData.pType, life: 1
-        };
-        fireballs.push(fb);
-        playSound('blast');
-    }
-    
-    if (Math.random() < punchRate && Math.abs(dist) < 150) {
-            cpu.isAttacking = true;
-            playSound('punch');
-            setTimeout(() => { if(players[cpuId]) players[cpuId].isAttacking = false; }, 200);
-            const attRange = 70;
-            const attX = cpu.facingRight ? cpu.x + cpu.width : cpu.x - attRange;
-            if (attX < p1.x + p1.width && attX + attRange > p1.x && cpu.y < p1.y + p1.height && cpu.y + 15 > p1.y) {
-                players[myId].health -= 10;
-                playSound('hit');
-                createParticles(p1.x + 30, p1.y + 50, '#ff0000', 5);
-                if(players[myId].health <= 0) setTimeout(() => checkWinCondition(), 500);
-            }
+    if (cpu.stunTimer > 0) {
+        cpu.stunTimer--;
+        cpu.x += cpu.knockbackX;
+        cpu.knockbackX *= 0.85;
+    } else {
+        // Movement Logic
+        let acc = 1.0;
+        if (Math.abs(dist) < safeDistance) {
+            cpu.vx += cpu.facingRight ? -acc : acc;
+        } else if (Math.abs(dist) > 500) {
+            cpu.vx += cpu.facingRight ? acc : -acc;
         }
+        
+        cpu.vx *= 0.82; // friction
+        if (cpu.vx > speed) cpu.vx = speed;
+        if (cpu.vx < -speed) cpu.vx = -speed;
+        
+        cpu.x += cpu.vx;
+        
+        // Attacks
+        const cpuHasFireball = fireballs.some(f => f.owner === cpuId);
+        if (!cpuHasFireball && Math.random() < fireRate) {
+            const charData = CHARACTERS[cpu.character];
+            const fb = {
+                x: cpu.facingRight ? cpu.x + cpu.width : cpu.x - charData.pSize,
+                y: cpu.y + cpu.height / 2 - (charData.pSize/2),
+                vx: cpu.facingRight ? charData.pSpeed : -charData.pSpeed,
+                owner: cpuId, color: charData.pColor, size: charData.pSize, damage: 20,
+                charKey: cpu.character, pType: charData.pType, life: 1
+            };
+            fireballs.push(fb);
+            playSound('blast');
+        }
+        
+        if (Math.random() < punchRate && Math.abs(dist) < 150) {
+                cpu.isAttacking = true;
+                playSound('punch');
+                setTimeout(() => { if(players[cpuId]) players[cpuId].isAttacking = false; }, 200);
+                const attRange = 70;
+                const attX = cpu.facingRight ? cpu.x + cpu.width : cpu.x - attRange;
+                if (attX < p1.x + p1.width && attX + attRange > p1.x && cpu.y < p1.y + p1.height && cpu.y + 15 > p1.y) {
+                    players[myId].health -= 10;
+                    if(players[myId].vx === undefined) { players[myId].vx = 0; players[myId].stunTimer = 0; players[myId].knockbackX = 0; }
+                    players[myId].stunTimer = 15;
+                    players[myId].knockbackX = cpu.facingRight ? 12 : -12;
+                    playSound('hit');
+                    createParticles(p1.x + 30, p1.y + 50, '#ff0000', 5);
+                    if(players[myId].health <= 0) setTimeout(() => checkWinCondition(), 500);
+                }
+            }
 
-    // CPU Jump Logic
-    if (!cpuIsJumping && Math.random() < 0.015) {
-        cpuVelocityY = JUMP_POWER;
-        cpuIsJumping = true;
+        // CPU Jump Logic
+        if (!cpuIsJumping && Math.random() < 0.015) {
+            cpuVelocityY = JUMP_POWER;
+            cpuIsJumping = true;
+        }
     }
     
     cpuVelocityY += GRAVITY;
@@ -493,6 +530,9 @@ function updateProjectilesAndParticles() {
                     if (fb.x + fb.size > p.x && fb.x < p.x + p.width && fb.y + fb.size > p.y && fb.y < p.y + p.height) {
                         p.health -= fb.damage;
                         if (p.health < 0) p.health = 0;
+                        if (p.vx === undefined) { p.vx = 0; p.stunTimer = 0; p.knockbackX = 0; }
+                        p.stunTimer = 20;
+                        p.knockbackX = fb.vx > 0 ? 15 : -15;
                         fb.life = 0;
                         playSound('hit');
                         createParticles(fb.x, fb.y, fb.color, 15);
@@ -595,16 +635,57 @@ function draw() {
 
         ctx.shadowBlur = 20; ctx.shadowColor = charData.color; ctx.fillStyle = charData.color;
         
+        // Draw Shadow
+        ctx.save();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        let shadowWidth = p.width - (FLOOR_Y - p.height - p.y) * 0.2; 
+        if (shadowWidth < 10) shadowWidth = 10;
+        ctx.beginPath();
+        ctx.ellipse(p.x + p.width/2, FLOOR_Y, shadowWidth/2, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
         // Draw image or fallback box
         if(img && img.complete && img.naturalHeight !== 0) {
-            // Flip the image if facing left
-            if (!p.facingRight) {
-                ctx.scale(-1, 1);
-                ctx.drawImage(img, -p.x - p.width, p.y, p.width, p.height);
-                ctx.scale(-1, 1);
+            ctx.save();
+            
+            // Move to center of character's feet to apply transformations
+            let cx = p.x + p.width/2;
+            let cy = p.y + p.height; 
+            
+            ctx.translate(cx, cy);
+            if (!p.facingRight) ctx.scale(-1, 1); // Flip if facing left
+            
+            let scaleX = 1, scaleY = 1, rotation = 0;
+            
+            if (p.isAttacking) {
+                // Attack animation: lunge forward and tilt
+                ctx.translate(15, 0);
+                rotation = 0.1; 
+            } else if (p.y + p.height < FLOOR_Y) {
+                // Jump/Fall animation: stretch vertically
+                scaleX = 0.9; scaleY = 1.1;
+                if (p.stunTimer > 0) rotation = -0.2; // knocked back in air
+            } else if (p.stunTimer > 0) {
+                // Knockback on ground: tilt backward
+                rotation = -0.3;
+            } else if (p.vx !== undefined && Math.abs(p.vx) > 1) {
+                // Run animation: Wobble left and right
+                rotation = Math.sin(Date.now() / 60) * 0.15;
             } else {
-                ctx.drawImage(img, p.x, p.y, p.width, p.height);
+                // Idle animation: Breathing (squash and stretch slowly)
+                scaleY = 1 + Math.sin(Date.now() / 250) * 0.02;
+                scaleX = 1 - Math.sin(Date.now() / 250) * 0.01;
             }
+            
+            ctx.rotate(rotation);
+            ctx.scale(scaleX, scaleY);
+            
+            // Draw image (offset by half width and full height since we translated to feet)
+            ctx.drawImage(img, -p.width/2, -p.height, p.width, p.height);
+            
+            ctx.restore();
         } else {
             ctx.fillRect(p.x, p.y, p.width, p.height);
             ctx.fillStyle = 'white'; ctx.shadowBlur = 0;
