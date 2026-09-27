@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anime Combat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="rotate-msg">
+        Please Rotate Your Phone 📱<br>
+        <span style="font-size: 0.6em; color: #fff; margin-top: 10px;">Game requires Landscape Mode</span>
+    </div>
+    
+    <div id="ui-layer">
+        <div id="menu-screen" class="screen">
+            <h1>ANIME BATTLE</h1>
+            
+            <div class="character-select">
+                <h3>Select Your Fighter</h3>
+                <div class="char-grid" id="charGrid">
+                    <!-- Javascript will populate this -->
+                </div>
+                <img id="charPreviewImg" src="goku.png" style="height: 180px; margin: 15px auto; display: block; filter: drop-shadow(0 0 15px #0ff);" />
+                <h4 id="charPreviewName" style="color: #0ff; text-align: center; margin-top: -5px; text-transform: uppercase;">GOKU</h4>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="Your Name" maxlength="10">
+                <input type="text" id="roomId" placeholder="Secret Room ID (e.g. 1234)">
+                <button id="joinBtn">MULTIPLAYER FIGHT!</button>
+            </div>
+            <hr style="border: 1px solid #0ff; margin: 15px 0;">
+            <div class="input-group">
+                <select id="difficulty" style="padding: 10px; font-size: 16px; background: #111; color: #0ff; border: 2px solid #0ff; margin-bottom: 10px;">
+                    <option value="easy">Easy CPU</option>
+                    <option value="intermediate">Intermediate CPU</option>
+                    <option value="hard">Hard CPU</option>
+                </select>
+                <button id="singlePlayerBtn" style="background: #800080; border-color: #f0f;">PLAY VS CPU</button>
+            </div>
+            <p id="errorMsg"></p>
+        </div>
+        
+        <div id="game-over-screen" class="screen hidden">
+            <h1 id="winner-text">YOU WIN!</h1>
+            <button id="restartBtn" onclick="location.reload()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div class="hud">
+            <div class="health-bar-container p1">
+                <div class="name-tag" id="name1">Player 1</div>
+                <div class="health-bar-bg"><div class="health-bar" id="hp1"></div></div>
+            </div>
+            <div class="controls-hint">F: Punch | SPACE: Special Attack | SHIFT: Dash</div>
+            <div class="health-bar-container p2">
+                <div class="name-tag" id="name2">Player 2</div>
+                <div class="health-bar-bg"><div class="health-bar" id="hp2"></div></div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+        
+        <!-- Mobile Touch Controls -->
+        <div id="mobile-controls">
+            <div class="d-pad">
+                <button id="btn-left" class="touch-btn">◀</button>
+                <button id="btn-right" class="touch-btn">▶</button>
+                <button id="btn-jump" class="touch-btn">▲</button>
+            </div>
+            <div class="action-buttons">
+                <button id="btn-punch" class="touch-btn">👊</button>
+                <button id="btn-fireball" class="touch-btn">🔥</button>
+                <button id="btn-dash" class="touch-btn">💨</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
